@@ -1,0 +1,12 @@
+dependencies:
+- name: kafka
+  repository: http://storage.googleapis.com/kubernetes-charts-incubator
+  version: 0.20.7
+- name: redis
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  version: 10.3.4
+- name: dotnetcore-api
+  repository: http://127.0.0.1:8879/charts
+  version: 1.0.0
+digest: sha256:dde16eca62a6cd7336b6ffa089bf880ba5173070db60bf43854c18fb1fa4a760
+generated: "2020-02-01T11:35:35.030695+01:00"

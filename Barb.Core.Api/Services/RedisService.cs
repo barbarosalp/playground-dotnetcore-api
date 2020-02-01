@@ -19,7 +19,7 @@ namespace Barb.Core.Api.Services
             var port = Convert.ToInt32(config["RedisPort"]);
             try
             {
-                var configString = $"{host}:{port},connectRetry=5,connectTimeout=10000";
+                var configString = $"{host}:{port},abortConnect=false";
                 _redis = ConnectionMultiplexer.Connect(configString);
                 _database = _redis.GetDatabase(1);
             }

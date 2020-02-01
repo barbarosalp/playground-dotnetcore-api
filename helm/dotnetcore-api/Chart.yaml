@@ -1,0 +1,9 @@
+apiVersion: v2
+name: dotnetcore-api
+description: Rest Api built with dotnetcore
+
+type: application
+
+version: 1.0.0
+
+appVersion: 1.0-SNAPSHOT

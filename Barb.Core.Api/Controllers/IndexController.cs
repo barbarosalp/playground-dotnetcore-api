@@ -24,7 +24,8 @@ namespace Barb.Core.Api.Controllers
         public IndexController(
             ILogger<IndexController> logger,
             IOptionsMonitor<ApplicationConfiguration> config,
-            RedisService redis)
+            RedisService redis
+            )
         {
             _logger = logger;
             _config = config;
