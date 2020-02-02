@@ -1,4 +1,5 @@
 dotnetcore-api:
+  enabled: false
   replicaCount: 1
   image:
     pullPolicy: Never
@@ -19,7 +20,7 @@ dotnetcore-api:
     redis_port: 6379
 
 kafka:
-  enabled: false
+  enabled: true
   replicas: 1
   persistence:
     size: 256Mi
@@ -28,8 +29,16 @@ kafka:
     storage: 256Mi
   external:
     enabled: true
+    type: NodePort
+  configurationOverrides:    
+    ## If external service type is Nodeport:    
+    "advertised.listeners": |-
+      EXTERNAL://localghost:31090
+    "listener.security.protocol.map": |-
+      PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
 
 redis:
+  enabled: true
   usePassword: false
   cluster:
     enabled: false

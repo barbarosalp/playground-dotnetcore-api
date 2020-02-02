@@ -29,4 +29,4 @@ helm package --dependency-update "${WORK_DIR}"/component --destination "${HELM_L
 helm upgrade --install component -f "${WORK_DIR}"/component-values.yaml "${HELM_LOCAL_REPO}"/component-1.0.0.tgz
 
 # Wait for healthcheck
-kubectl rollout status --watch=true deployment component-dotnetcore-api --timeout=60s
+#kubectl rollout status --watch=true deployment component-dotnetcore-api --timeout=60s

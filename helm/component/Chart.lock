@@ -8,5 +8,5 @@ dependencies:
 - name: dotnetcore-api
   repository: http://127.0.0.1:8879/charts
   version: 1.0.0
-digest: sha256:dde16eca62a6cd7336b6ffa089bf880ba5173070db60bf43854c18fb1fa4a760
-generated: "2020-02-01T11:35:35.030695+01:00"
+digest: sha256:b117498c6ec93f4b9ec78750e19c462914239232b080195fcecee8f731177642
+generated: "2020-02-02T14:33:29.539854+01:00"

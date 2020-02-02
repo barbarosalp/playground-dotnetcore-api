@@ -1,5 +1,7 @@
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Barb.Core.Api.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -24,19 +26,27 @@ namespace Barb.Core.Api.Services
             _logger.LogDebug("Background service is starting.");
 
             stoppingToken.Register(() =>
-                _logger.LogDebug($" GracePeriod background task is stopping.")); 
-            
-            
-            _kafkaService.Consume("messages", "group-messages", stoppingToken,
-                message =>
-                {
-                    _logger.LogInformation($"Key: {message.Key} => {message.Value}");
-                });
-        
-        
+                _logger.LogDebug($" Background task is stopping."));
+
+
+            await Task.Run(() =>
+            {
+                _kafkaService.Consume(
+                    "messages",
+                    "dummy",
+                    stoppingToken,
+                    message =>
+                    {
+                        var whisky = JsonSerializer.Deserialize<Whisky>(message.Value);
+                        _redisService.Execute(async redis =>
+                        {
+                            await redis.StringSetAsync($"whiskey:{whisky.Id}", message.Value);
+                        });
+                    }
+                );
+            }, stoppingToken);
+
             _logger.LogDebug($"Background service is stopping.");
-            
         }
-        
     }
 }

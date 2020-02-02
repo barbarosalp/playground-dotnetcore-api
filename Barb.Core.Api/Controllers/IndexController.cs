@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Mime;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Barb.Core.Api.Configuration;
 using Barb.Core.Api.Models;
 using Barb.Core.Api.Services;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace Barb.Core.Api.Controllers
 {
@@ -17,19 +19,21 @@ namespace Barb.Core.Api.Controllers
     {
         private readonly ILogger<IndexController> _logger;
         private readonly IOptionsMonitor<ApplicationConfiguration> _config;
-        private readonly RedisService _redis;
-        private readonly Whisky _whisky = new Whisky("Burak", "Kusadasi");
+        private readonly IRedisService _redis;
+        private readonly IKafkaService _kafka;
         private readonly Random _random = new Random();
 
         public IndexController(
             ILogger<IndexController> logger,
             IOptionsMonitor<ApplicationConfiguration> config,
-            RedisService redis
-            )
+            IRedisService redis,
+            IKafkaService kafka
+        )
         {
             _logger = logger;
             _config = config;
             _redis = redis;
+            _kafka = kafka;
         }
 
         [HttpGet]
@@ -39,6 +43,21 @@ namespace Barb.Core.Api.Controllers
             return _config.CurrentValue;
         }
 
+        [HttpGet("{id}")]
+        [Produces(MediaTypeNames.Application.Json)]
+        public async Task<ActionResult<Whisky>> GetIndex(int id)
+        {
+            Whisky item = null;
+            await _redis.ExecuteAsync(async redis =>
+            {
+                var response = await redis.StringGetAsync($"whiskey:{id}");
+                item = JsonSerializer.Deserialize<Whisky>(response);
+                
+            });
+
+            return Ok(item);
+        }
+
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
@@ -46,10 +65,8 @@ namespace Barb.Core.Api.Controllers
         public ActionResult<Whisky> Create(Whisky whisky)
         {
             whisky.Id = _random.Next(100000000);
-            _redis.Execute(async redis =>
-            {
-                await redis.StringSetAsync($"whiskey:{whisky.Id}", JsonSerializer.Serialize(whisky));
-            });
+
+            _kafka.SendMessage("messages", JsonSerializer.Serialize(whisky));
 
             return new StatusCodeResult(201);
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using Barb.Core.Api.Configuration;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
@@ -32,7 +33,13 @@ namespace Barb.Core.Api.Services
         public void SendMessage(string topicName, string message)
         {
             _producer.Produce(topicName, new Message<string, string>() {Value = message},
-                report => { _logger.LogInformation(report.Offset.Value.ToString()); });
+                report =>
+                {
+                    if (report.Error.IsError)
+                    {
+                        _logger.LogError(report.Error.Reason);
+                    }
+                });
         }
 
         public void Consume(
@@ -48,21 +55,19 @@ namespace Barb.Core.Api.Services
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
-            IConsumer<string, string> consumer = null;
-
-            _consumers.AddOrUpdate(topicName,
+            var consumer = _consumers.AddOrUpdate(topicName,
                 s =>
                 {
-                    consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-                    consumer.Subscribe(topicName);
-                    return consumer;
+                    var consumerToInit = new ConsumerBuilder<string, string>(consumerConfig).Build();
+                    consumerToInit.Subscribe(topicName);
+                    return consumerToInit;
                 }, (s, oldConsumer) =>
                 {
                     oldConsumer.Close();
 
-                    consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-                    consumer.Subscribe(topicName);
-                    return consumer;
+                    var consumerToBeUpdated = new ConsumerBuilder<string, string>(consumerConfig).Build();
+                    consumerToBeUpdated.Subscribe(topicName);
+                    return consumerToBeUpdated;
                 }
             );
 
@@ -75,8 +80,7 @@ namespace Barb.Core.Api.Services
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    _logger.LogError(e.Message);
                 }
             }
 

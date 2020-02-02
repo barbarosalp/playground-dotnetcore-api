@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -27,10 +28,15 @@ namespace Barb.Core.Api.Services
 
             logger.LogDebug("Connected to Redis");
         }
-
+        
         public void Execute(Action<IDatabase> action)
         {
-            action.Invoke(_database);
+            action(_database);
+        }
+
+        public async Task ExecuteAsync(Func<IDatabase,Task> action)
+        {
+            await action(_database);
         }
     }
 }
