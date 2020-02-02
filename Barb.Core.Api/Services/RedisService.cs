@@ -5,31 +5,27 @@ using StackExchange.Redis;
 
 namespace Barb.Core.Api.Services
 {
-    public class RedisService
+    public class RedisService : IRedisService
     {
-        private readonly ILogger<RedisService> _logger;
-        private readonly ConnectionMultiplexer _redis;
         private readonly IDatabase _database;
 
         public RedisService(ILogger<RedisService> logger, IConfiguration config)
         {
-            _logger = logger;
-
             var host = config["RedisHost"];
             var port = Convert.ToInt32(config["RedisPort"]);
             try
             {
                 var configString = $"{host}:{port},abortConnect=false";
-                _redis = ConnectionMultiplexer.Connect(configString);
-                _database = _redis.GetDatabase(1);
+                var redis = ConnectionMultiplexer.Connect(configString);
+                _database = redis.GetDatabase(1);
             }
             catch (RedisConnectionException err)
             {
-                _logger.LogError(err.ToString());
+                logger.LogError(err.ToString());
                 throw err;
             }
 
-            _logger.LogDebug("Connected to Redis");
+            logger.LogDebug("Connected to Redis");
         }
 
         public void Execute(Action<IDatabase> action)

@@ -7,30 +7,36 @@ namespace Barb.Core.Api.Services
 {
     public class ConsumerService : BackgroundService
     {
+        private readonly IKafkaService _kafkaService;
+        private readonly IRedisService _redisService;
         private readonly ILogger<ConsumerService> _logger;
 
-        public ConsumerService(ILogger<ConsumerService> logger)
+        public ConsumerService(IKafkaService kafkaService, IRedisService redisService, ILogger<ConsumerService> logger)
         {
+            _kafkaService = kafkaService;
+            _redisService = redisService;
             _logger = logger;
+            _logger.LogDebug("Background service constructor.");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogDebug($"GracePeriodManagerService is starting.");
+            _logger.LogDebug("Background service is starting.");
 
             stoppingToken.Register(() =>
-                _logger.LogDebug($" GracePeriod background task is stopping."));
-
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogDebug($"GracePeriod task doing background work.");
-
-                _logger.LogInformation("I am still running");
-
-                await Task.Delay(1000, stoppingToken);
-            }
-
-            _logger.LogDebug($"GracePeriod background task is stopping.");
+                _logger.LogDebug($" GracePeriod background task is stopping.")); 
+            
+            
+            _kafkaService.Consume("messages", "group-messages", stoppingToken,
+                message =>
+                {
+                    _logger.LogInformation($"Key: {message.Key} => {message.Value}");
+                });
+        
+        
+            _logger.LogDebug($"Background service is stopping.");
+            
         }
+        
     }
 }

@@ -23,8 +23,10 @@ namespace Barb.Core.Api
         {
             services.Configure<ApplicationConfiguration>(Configuration);
 
-            services.AddSingleton<RedisService>();
-            // services.AddHostedService<ConsumerService>();
+            services.AddSingleton<IRedisService,RedisService>();
+            services.AddSingleton<IKafkaService, KafkaService>();
+            
+            services.AddHostedService<ConsumerService>();
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "Core Api", Version = "v1"}); });
